@@ -12,6 +12,8 @@ from langsmith import traceable
 
 from .gtm_records import OFFERINGS, PROSPECTS, REP_IDS
 
+SENSITIVE_FIELDS = ("billing_qualification",)
+
 __all__ = [
     "get_offering", "get_prospect_record", "update_prospect_info",
     "fetch_engagement_history", "fetch_account_details", "fetch_tech_stack",
@@ -63,7 +65,10 @@ def fetch_tech_stack(prospect_id):
 @traceable(run_type="tool", name="get_profile_from_db")
 def get_profile_from_db(prospect_id):
     "Look up a stored prospect profile. Returns {'prospect_profile': record|None}."
-    return {"prospect_profile": _PROFILES.get(prospect_id)}
+    profile = _PROFILES.get(prospect_id)
+    if profile is not None:
+        profile = {k: v for k, v in profile.items() if k not in SENSITIVE_FIELDS}
+    return {"prospect_profile": profile}
 
 
 @traceable(run_type="tool", name="save_profile_to_db")
